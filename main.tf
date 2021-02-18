@@ -18,7 +18,7 @@
 # https://github.com/iq3cloud-dev/terraform-azurerm-iq3-agw-internal-https
 
 locals {
-  backend_address_pool_name      = "${data.azurerm_virtual_network.vnet.name}-beap"
+  backend_address_pool_name = "${data.azurerm_virtual_network.vnet.name}-beap"
 }
 
 resource "azurerm_public_ip" "agw_public_ip" {
