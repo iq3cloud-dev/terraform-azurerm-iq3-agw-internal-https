@@ -32,9 +32,10 @@ variable "agw_name" {
   description = "The name of the application gateway"
 }
 
-variable "agw_backend_port" {
-  type        = number
-  description = "The backend port of the default backend pool, where the routes should redirect to"
+variable "is_private_agw" {
+  type        = bool
+  default     = true
+  description = "Defines wether the AGW is publicly reachable"
 }
 
 variable "agw_private_ip" {
@@ -60,4 +61,21 @@ variable "cert_key_vault_name" {
 variable "cert_name" {
   type        = string
   description = "The name of the SSL certificate inside the certificate key vault"
+}
+
+variable "backend_fqdns" {
+  type        = list(string)
+  default     = []
+  description = "Backend addresses to be added to Pool"
+}
+
+variable "backend_type" {
+  type        = string
+  default     = "http"
+  description = "Define backend http or https type"
+
+  validation {
+    condition     = contains(["http", "https"], var.backend_type)
+    error_message = "The backend type must be either http or https."
+  }
 }

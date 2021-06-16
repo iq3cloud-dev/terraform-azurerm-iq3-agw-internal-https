@@ -70,15 +70,19 @@ resource "azurerm_application_gateway" "agw" {
     public_ip_address_id = azurerm_public_ip.agw_public_ip.id
   }
 
-  frontend_ip_configuration {
-    name                          = "feip"
-    private_ip_address_allocation = "Static"
-    private_ip_address            = var.agw_private_ip
-    subnet_id                     = data.azurerm_subnet.subnet.id
+  dynamic "frontend_ip_configuration" {
+    for_each = var.is_private_agw ? ["feip"] : []
+    content {
+      name                          = frontend_ip_configuration.key
+      private_ip_address_allocation = "Static"
+      private_ip_address            = var.agw_private_ip
+      subnet_id                     = data.azurerm_subnet.subnet.id
+    }
   }
 
   backend_address_pool {
-    name = local.backend_address_pool_name
+    name  = local.backend_address_pool_name
+    fqdns = length(var.backend_fqdns) == 0 ? null : var.backend_fqdns
   }
 
   frontend_port {
@@ -91,19 +95,35 @@ resource "azurerm_application_gateway" "agw" {
     port = 80
   }
 
-  backend_http_settings {
-    pick_host_name_from_backend_address = true
-    name                                = "setting-443-to-${var.agw_backend_port}"
-    cookie_based_affinity               = "Disabled"
-    port                                = var.agw_backend_port
-    protocol                            = "Http"
-    request_timeout                     = 20
-    probe_name                          = "customprobe"
+  dynamic "backend_http_settings" {
+    for_each = var.backend_type == "http" ? [var.backend_type] : []
+    content {
+      pick_host_name_from_backend_address = true
+      name                                = "setting-443-to-${var.backend_type}"
+      cookie_based_affinity               = "Disabled"
+      port                                = 80
+      protocol                            = "Http"
+      request_timeout                     = 20
+      probe_name                          = "customprobe"
+    }
+  }
+
+  dynamic "backend_http_settings" {
+    for_each = var.backend_type == "https" ? [var.backend_type] : []
+    content {
+      pick_host_name_from_backend_address = true
+      name                                = "setting-443-to-${var.backend_type}"
+      cookie_based_affinity               = "Disabled"
+      port                                = 443
+      protocol                            = "https"
+      request_timeout                     = 20
+      probe_name                          = "customprobe"
+    }
   }
 
   http_listener {
     name                           = "listener-443"
-    frontend_ip_configuration_name = "feip"
+    frontend_ip_configuration_name = var.is_private_agw ? "feip" : "public_ip"
     frontend_port_name             = "port-443"
     protocol                       = "Https"
     ssl_certificate_name           = var.cert_name
@@ -111,7 +131,7 @@ resource "azurerm_application_gateway" "agw" {
 
   http_listener {
     name                           = "listener-80"
-    frontend_ip_configuration_name = "feip"
+    frontend_ip_configuration_name = var.is_private_agw ? "feip" : "public_ip"
     frontend_port_name             = "port-80"
     protocol                       = "Http"
   }
@@ -129,7 +149,7 @@ resource "azurerm_application_gateway" "agw" {
     rule_type                  = "Basic"
     http_listener_name         = "listener-443"
     backend_address_pool_name  = local.backend_address_pool_name
-    backend_http_settings_name = "setting-443-to-${var.agw_backend_port}"
+    backend_http_settings_name = "setting-443-to-${var.backend_type}"
   }
 
   request_routing_rule {
@@ -142,7 +162,7 @@ resource "azurerm_application_gateway" "agw" {
   probe {
     pick_host_name_from_backend_http_settings = true
     name                                      = "customprobe"
-    protocol                                  = "Http"
+    protocol                                  = var.backend_type
     path                                      = "/"
     timeout                                   = 30
     interval                                  = 30
