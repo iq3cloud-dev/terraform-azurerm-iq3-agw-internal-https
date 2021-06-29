@@ -79,3 +79,8 @@ variable "backend_type" {
     error_message = "The backend type must be either http or https."
   }
 }
+
+variable "override_backend_host_name" {
+  type    = string
+  default = null
+}

@@ -98,26 +98,28 @@ resource "azurerm_application_gateway" "agw" {
   dynamic "backend_http_settings" {
     for_each = var.backend_type == "http" ? [var.backend_type] : []
     content {
-      pick_host_name_from_backend_address = true
+      pick_host_name_from_backend_address = var.override_backend_host_name == null
       name                                = "setting-443-to-${var.backend_type}"
       cookie_based_affinity               = "Disabled"
       port                                = 80
       protocol                            = "Http"
       request_timeout                     = 20
       probe_name                          = "customprobe"
+      host_name                           = var.override_backend_host_name
     }
   }
 
   dynamic "backend_http_settings" {
     for_each = var.backend_type == "https" ? [var.backend_type] : []
     content {
-      pick_host_name_from_backend_address = true
+      pick_host_name_from_backend_address = var.override_backend_host_name == null
       name                                = "setting-443-to-${var.backend_type}"
       cookie_based_affinity               = "Disabled"
       port                                = 443
       protocol                            = "https"
       request_timeout                     = 20
       probe_name                          = "customprobe"
+      host_name                           = var.override_backend_host_name
     }
   }
 
