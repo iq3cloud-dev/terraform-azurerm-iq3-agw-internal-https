@@ -186,6 +186,14 @@ resource "azurerm_application_gateway" "agw" {
     request_body_check       = true
     rule_set_type            = "OWASP"
     rule_set_version         = "3.0"
+
+    dynamic "disabled_rule_group" {
+      for_each = var.disabled_rules
+      content {
+        rule_group_name = disabled_rule_group.value.rule_group_name
+        rules           = disabled_rule_group.value.rules
+      }
+    }
   }
 
   identity {

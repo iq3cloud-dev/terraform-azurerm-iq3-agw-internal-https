@@ -84,3 +84,14 @@ variable "override_backend_host_name" {
   type    = string
   default = null
 }
+
+#######################
+# WAF Rule Exceptions #
+#######################
+variable "disabled_rules" {
+  type = list(object({
+    rule_group_name = string
+    rules           = list(number)
+  }))
+  default = []
+}
