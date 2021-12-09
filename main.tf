@@ -73,7 +73,7 @@ resource "azurerm_application_gateway" "agw" {
   dynamic "frontend_ip_configuration" {
     for_each = var.is_private_agw ? ["feip"] : []
     content {
-      name                          = frontend_ip_configuration.key
+      name                          = frontend_ip_configuration.value
       private_ip_address_allocation = "Static"
       private_ip_address            = var.agw_private_ip
       subnet_id                     = data.azurerm_subnet.subnet.id
