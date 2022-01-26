@@ -204,4 +204,9 @@ resource "azurerm_application_gateway" "agw" {
     name                = var.cert_name
     key_vault_secret_id = data.azurerm_key_vault_secret.certificate.id
   }
+
+  ssl_policy {
+    policy_type = "Predefined"
+    policy_name = var.ssl_policy_name
+  }
 }

@@ -85,6 +85,12 @@ variable "override_backend_host_name" {
   default = null
 }
 
+variable "ssl_policy_name" {
+  type        = string
+  default     = "AppGwSslPolicy20170401"
+  description = "Name of the predefined SSL TLS policiy"
+}
+
 #######################
 # WAF Rule Exceptions #
 #######################
